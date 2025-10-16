@@ -1,4 +1,4 @@
-package com.craftinginterpreters.lox
+package com.craftinginterpreters.lox;
 
 class Token {
     final TokenType type;
@@ -13,7 +13,7 @@ class Token {
         this.type = type;
     }
 
-    pulic String toString() {
+    public String toString() {
         return type + " " + lexeme + " " + literal;
     }
 }
