@@ -1,6 +1,4 @@
-package com.craftinginterpreters.lox;
-
-import java.util.List;
+package src.com.craftinginterpreters.lox;
 
 abstract class Expr {
   interface Visitor<R> {
