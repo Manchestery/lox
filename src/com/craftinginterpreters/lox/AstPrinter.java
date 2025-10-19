@@ -1,4 +1,4 @@
-package src.com.craftinginterpreters.lox;
+package com.craftinginterpreters.lox;
 
 class AstPrinter implements Expr.Visitor<String> {
   String print(Expr expr) {
@@ -18,7 +18,14 @@ class AstPrinter implements Expr.Visitor<String> {
   public String visitGroupingExpr(Expr.Grouping expr) {
     return parenthesize("group", expr.expression);
   }
-
+  @Override
+  public String visitVariableExpr(Expr.Variable expr) {
+    return expr.name.lexeme;
+  }
+  @Override
+  public String visitAssignExpr(Expr.Assign expr) {
+    return "(assign " + expr.name.lexeme + " " + expr.value.accept(this) + ")";
+  }
   @Override
   public String visitLiteralExpr(Expr.Literal expr) {
     if (expr.value == null) return "nil";
