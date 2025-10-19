@@ -13,6 +13,12 @@ class AstPrinter implements Expr.Visitor<String> {
   public String visitConditionalExpr(Expr.Conditional expr) {
     return parenthesize("?:", expr.condition, expr.thenBranch, expr.elseBranch);
   }
+  @Override
+  public String visitLogicalExpr(Expr.Logical expr) {
+      return "(" + expr.operator.lexeme + " " +
+        expr.left.accept(this) + " " +
+        expr.right.accept(this) + ")";
+  }
   
   @Override
   public String visitGroupingExpr(Expr.Grouping expr) {

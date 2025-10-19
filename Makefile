@@ -24,16 +24,21 @@ help:
 $(BUILD_DIR):
 	@if not exist $(BUILD_DIR) mkdir $(BUILD_DIR)
 
+# 生成 AST 节点
+ast:
+	javac -d build src/com/craftinginterpreters/tool/GenerateAst.java
+	java -cp build com.craftinginterpreters.tool.GenerateAst src
+
 # 编译
-compile: $(BUILD_DIR)
+compile: $(BUILD_DIR) ast
 	@echo 编译 Lox 源文件...
-	javac -d $(BUILD_DIR) $(SRC_FILES)
+	javac -encoding UTF-8 -d $(BUILD_DIR) src/com/craftinginterpreters/lox/*.java src/com/craftinginterpreters/lox/Expr.java src/com/craftinginterpreters/lox/Stmt.java src/com/craftinginterpreters/lox/RuntimeError.java
 	@echo 编译完成!
 
 # 运行交互模式
 run: compile
 	@echo 启动 Lox 解释器...
-	java -cp $(BUILD_DIR) $(MAIN_CLASS)
+	java -cp $(BUILD_DIR) $(MAIN_CLASS) $(file)
 
 # 测试扫描器
 test: compile
@@ -57,4 +62,4 @@ clean:
 # 重新构建
 rebuild: clean compile
 
-.PHONY: all help compile run test test-ast clean rebuild
+.PHONY: all ast build run clean
