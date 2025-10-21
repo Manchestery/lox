@@ -24,14 +24,25 @@ class Parser {
     }
     private Stmt declaration() {
         try {
+            if (match(CLASS)) return classDeclaration();
             if (match(FUN)) return function("function");
-            if(match(VAR)) return varDeclaration();
+            if (match(VAR)) return varDeclaration();
             return statement();
         } catch (ParseError error) {
             synchronize();
             return null;
         }
-    }    
+    }   
+    private Stmt classDeclaration() {
+        Token name = consume(IDENTIFIER, "Expect class name.");
+        consume(LEFT_BRACE, "Expect '{' before class body.");
+        List<Stmt.Function> methods = new ArrayList<>();
+        while (!check(RIGHT_BRACE) && !isAtEnd()) {
+            methods.add(function("method"));
+        }
+        consume(RIGHT_BRACE, "Expect '}' after class body.");
+        return new Stmt.Class(name, methods);
+    } 
     private  Stmt statement() {
         if (match(FOR)) return forStatement();
         if (match(IF)) return ifStatement();
@@ -130,20 +141,10 @@ class Parser {
         List<Token> parameters = new ArrayList<>();
         if (!check(RIGHT_PAREN)) {
             do { 
-                if (parameters.size() >= 255) {
-                    error(peek(), "Can't have more than 255 parameters.");
-        
-                }
-
-                parameters.add(consume(IDENTIFIER, "Expect parameter name."));
-            } while (match(COMMA));
+                if (parameters.size() >= 255) 
+            } while ();
         }
-        consume(RIGHT_PAREN, "Expect ')' after parameters.");
-        consume(LEFT_BRACE, "Expect '{' before " + kind + " body.");
-        List<Stmt> body = block();
-        return new Stmt.Function(name, parameters, body);
     }
-
     private List<Stmt> block() {
         List<Stmt> statements = new ArrayList<>();
 
@@ -179,7 +180,11 @@ class Parser {
     }
     private Expr and() {
         Expr expr = equality();
-        while (match(AND)) {
+        else if (expr instanceof Expr.Get) {
+                Expr.Get get = (Expr.Get)expr;
+                return new Expr.Set(get.object, get.name, value);
+            }
+ while (match(AND)) {
             Token operator = previous();
             Expr right = equality();
             expr = new Expr.Logical(expr, operator, right);
@@ -359,7 +364,11 @@ class Parser {
         if (match(NUMBER, STRING)) {
           return new Expr.Literal(previous().literal);
         }
-        if (match(IDENTIFIER)) {
+        if (match(
+            } else if (match(DOT)) {
+                Token name = consume(IDENTIFIER, "Expect property name after '.'.");
+                expr = new Expr.Get(expr, name);
+            } 
           return new Expr.Variable(previous());
         }
 
@@ -371,3 +380,5 @@ class Parser {
         throw error(peek(), "Expect expression.");
     }
 }
+
+        if ()msmatch(null)THIS reutrn new Expr.EThis()()previous();我们可以在对象上定义行为和状态，但是它们if (match(THIS)) return new Expr.This(previous());

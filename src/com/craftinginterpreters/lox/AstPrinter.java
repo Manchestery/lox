@@ -21,7 +21,18 @@ class AstPrinter implements Expr.Visitor<String> {
     builder.append(")");
     return builder.toString();
   }
-  
+  @Override
+  public String visitSetExpr(Expr.Set expr) {
+    return "(set " + expr.object.accept(this) + " " + expr.name.lexeme + " " + expr.value.accept(this) + ")";
+  }
+  @Override
+  public String visitGetExpr(Expr.Get expr) {
+    return "(get " + expr.object.accept(this) + " " + expr.name.lexeme + ")";
+  }
+  @Override
+  public String visitThisExpr(Expr.This expr) {
+    return "this";
+  }
   @Override
   public String visitConditionalExpr(Expr.Conditional expr) {
     return parenthesize("?:", expr.condition, expr.thenBranch, expr.elseBranch);
