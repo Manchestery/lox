@@ -35,13 +35,18 @@ class Parser {
     }   
     private Stmt classDeclaration() {
         Token name = consume(IDENTIFIER, "Expect class name.");
+        Expr.Variable superclass = null;
+        if (match(LESS)) {
+            consume(IDENTIFIER, "Expect superclass name.");
+            superclass = new Expr.Variable(previous());
+        }
         consume(LEFT_BRACE, "Expect '{' before class body.");
         List<Stmt.Function> methods = new ArrayList<>();
         while (!check(RIGHT_BRACE) && !isAtEnd()) {
             methods.add(function("method"));
         }
         consume(RIGHT_BRACE, "Expect '}' after class body.");
-        return new Stmt.Class(name, methods);
+        return new Stmt.Class(name, superclass, methods);
     } 
     private  Stmt statement() {
         if (match(FOR)) return forStatement();
@@ -141,10 +146,20 @@ class Parser {
         List<Token> parameters = new ArrayList<>();
         if (!check(RIGHT_PAREN)) {
             do { 
-                if (parameters.size() >= 255) 
-            } while ();
+                if (parameters.size() >= 255) {
+                    error(peek(), "Can't have more than 255 parameters.");
+        
+                }
+
+                parameters.add(consume(IDENTIFIER, "Expect parameter name."));
+            } while (match(COMMA));
         }
+        consume(RIGHT_PAREN, "Expect ')' after parameters.");
+        consume(LEFT_BRACE, "Expect '{' before " + kind + " body.");
+        List<Stmt> body = block();
+        return new Stmt.Function(name, parameters, body);
     }
+
     private List<Stmt> block() {
         List<Stmt> statements = new ArrayList<>();
 
@@ -163,7 +178,11 @@ class Parser {
             if (expr instanceof Expr.Variable) {
                 Token name = ((Expr.Variable) expr).name;
                 return new Expr.Assign(name, value);
+            } else if (expr instanceof Expr.Get) {
+                Expr.Get get = (Expr.Get)expr;
+                return new Expr.Set(get.object, get.name, value);
             }
+
             error(equals, "Invalid assignment target.");
         }
 
@@ -180,11 +199,7 @@ class Parser {
     }
     private Expr and() {
         Expr expr = equality();
-        else if (expr instanceof Expr.Get) {
-                Expr.Get get = (Expr.Get)expr;
-                return new Expr.Set(get.object, get.name, value);
-            }
- while (match(AND)) {
+        while (match(AND)) {
             Token operator = previous();
             Expr right = equality();
             expr = new Expr.Logical(expr, operator, right);
@@ -350,7 +365,10 @@ class Parser {
         while (true) {
             if (match(LEFT_PAREN)) {
                 expr = finishCall(expr);
-            } else {
+            } else if (match(DOT)) {
+                Token name = consume(IDENTIFIER, "Expect property name after '.'.");
+                expr = new Expr.Get(expr, name);
+            }  else {
                 break;
             }
         }
@@ -364,11 +382,14 @@ class Parser {
         if (match(NUMBER, STRING)) {
           return new Expr.Literal(previous().literal);
         }
-        if (match(
-            } else if (match(DOT)) {
-                Token name = consume(IDENTIFIER, "Expect property name after '.'.");
-                expr = new Expr.Get(expr, name);
-            } 
+        if (match(SUPER)) {
+            Token keyword = previous();
+            consume(DOT, "Expect '.' after 'super'.");
+            Token method = consume(IDENTIFIER, "Expect superclass method name.");
+            return new Expr.Super(keyword, method);
+        }
+        if (match(THIS)) return new Expr.This(previous());
+        if (match(IDENTIFIER)) {
           return new Expr.Variable(previous());
         }
 
@@ -380,5 +401,3 @@ class Parser {
         throw error(peek(), "Expect expression.");
     }
 }
-
-        if ()msmatch(null)THIS reutrn new Expr.EThis()()previous();我们可以在对象上定义行为和状态，但是它们if (match(THIS)) return new Expr.This(previous());
