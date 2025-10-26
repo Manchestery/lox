@@ -2,5 +2,8 @@
     "github.copilot.nextEditSuggestions.enabled": true,
     "github.copilot.chat.codesearch.enabled": true,  
     "github.copilot.chat.inline.suggestions.enabled": false,
-    "github.copilot.inlineSuggest.enable": false
+    "github.copilot.inlineSuggest.enable": false,
+    "files.associations": {
+        "common.h": "c"
+    }
 }
