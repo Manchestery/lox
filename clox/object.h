@@ -24,6 +24,7 @@ typedef enum {
 } ObjType;
 struct Obj {
   ObjType type;
+  bool isMarked;
   struct Obj* next;
 };
 typedef struct {
@@ -56,6 +57,10 @@ typedef struct {
   ObjUpvalue** upvalues;
   int upvalueCount;
 } ObjClosure;
+typedef struct {
+  Obj obj;
+  ObjString* name;
+} ObjClass;
 ObjClosure* newClosure(ObjFunction* function);
 ObjFunction* newFunction();
 ObjNative* newNative(NativeFn function);
