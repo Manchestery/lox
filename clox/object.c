@@ -19,20 +19,26 @@ static Obj* allocateObject(size_t size, ObjType type) {
     #endif
     return object;
 }
+ObjBoundMethod* newBoundMethod(Value receiver,
+                               ObjClosure* method) {
+  ObjBoundMethod* bound = ALLOCATE_OBJ(ObjBoundMethod,
+                                       OBJ_BOUND_METHOD);
+  bound->receiver = receiver;
+  bound->method = method;
+  return bound;
+}
 ObjClass* newClass(ObjString* name) {
   ObjClass* klass = ALLOCATE_OBJ(ObjClass, OBJ_CLASS);
-  klass->name = name; 
+  klass->name = name;
+  initTable(&klass->methods);
   return klass;
 }
-static ObjString* allocateString(char* chars, int length,
-                                 uint32_t hash) {
+static ObjString* allocateString(char* chars, int length, uint32_t hash) {
     ObjString* string = ALLOCATE_OBJ(ObjString, OBJ_STRING);
+    
     string->length = length;
     string->chars = chars;
     string->hash = hash;
-    push(OBJ_VAL(string));
-    tableSet(&vm.strings, string, NIL_VAL);
-    pop();
     return string;
 }
 ObjClosure* newClosure(ObjFunction* function) {
@@ -83,14 +89,20 @@ ObjString* takeString(char* chars, int length) {
     return allocateString(chars, length, hash);
 }
 ObjString* copyString(const char* chars, int length) {
+    
     uint32_t hash = hashString(chars, length);
+    
     ObjString* interned = tableFindString(&vm.strings, chars, length, hash);
-    if (interned != NULL) return interned;
-
-    char* heapChars = ALLOCATE(char, length + 1);
-    memcpy(heapChars, chars, length);
-    heapChars[length] = '\0';
-    return allocateString(heapChars, length, hash);
+    
+    if (interned != NULL) {
+        return interned;
+    }
+    
+    ObjString* string = allocateString(chars, length, hash);
+    push(OBJ_VAL(string));
+    tableSet(&vm.strings, string, NIL_VAL);
+    pop();
+    return string;
 }
 ObjUpvalue* newUpvalue(Value* slot) {
     ObjUpvalue* upvalue = ALLOCATE_OBJ(ObjUpvalue, OBJ_UPVALUE);
@@ -109,6 +121,9 @@ static void printFunction(ObjFunction* function) {
 }
 void printObject(Value value) {
     switch (OBJ_TYPE(value)) {
+        case OBJ_BOUND_METHOD:
+            printFunction(AS_BOUND_METHOD(value)->method->function);
+            break;
         case OBJ_CLASS:
             printf("%s", AS_CLASS(value)->name->chars);
             break;

@@ -48,6 +48,7 @@ typedef struct {
 } Upvalue;
 typedef enum {
   TYPE_FUNCTION,
+  TYPE_METHOD,
   TYPE_SCRIPT
 } FunctionType;
 typedef struct  Compiler {
@@ -91,7 +92,6 @@ static void advance() {
     for (;;) {
         parser.current = scanToken();
         if (parser.current.type != TOKEN_ERROR) break;
-
         errorAtCurrent(parser.current.start);
     }
 }
@@ -374,7 +374,23 @@ static void or_(bool canAssign) {
 }
 
 static void string(bool canAssign) {
-  emitConstant(OBJ_VAL(copyString(parser.previous.start + 1, parser.previous.length - 2)));
+  // 检查字符串长度
+  if (parser.previous.length < 2) {
+    printf("ERROR: String literal too short\n");
+    return;
+  }
+  
+  // 调试 copyString
+  ObjString* str = copyString(parser.previous.start + 1, 
+                             parser.previous.length - 2);
+  if (str == NULL) {
+    printf("ERROR: copyString failed\n");
+    return;
+  }
+  
+  // 调试 emitConstant
+  emitConstant(OBJ_VAL(str));
+
 }
 static void namedVariable(Token name, bool canAssign) {
   uint8_t getOp, setOp;
@@ -506,14 +522,28 @@ static void function(FunctionType type) {
     emitByte(compiler.upvalues[i].index);
   }
 }
+static void method() {
+  consume(TOKEN_IDENTIFIER, "Expect method name.");
+  uint8_t constant = identifierConstant(&parser.previous);
+  FunctionType type = TYPE_FUNCTION;
+  function(type);
+  emitBytes(OP_METHOD, constant);
+}
 static void classDeclaration() {
   consume(TOKEN_IDENTIFIER, "Expect class name.");
+  Token className = parser.previous;
   uint8_t nameConstant  = identifierConstant(&parser.previous);
   declareVariable();
   emitBytes(OP_CLASS, nameConstant);
   defineVariable(nameConstant);
+  namedVariable(className, false);
   consume(TOKEN_LEFT_BRACE, "Expect '{' before class body.");
+  while (!check(TOKEN_RIGHT_BRACE) && !check(TOKEN_EOF)) {
+    method();
+  }
   consume(TOKEN_RIGHT_BRACE, "Expect '}' after class body.");
+  emitByte(OP_POP);
+
 }
 static void funDeclaration() {
   uint8_t global = parseVariable("Expect function name.");
